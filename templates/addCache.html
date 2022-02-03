@@ -5,7 +5,7 @@
 </head>
 <body>
 
-<h1>Dashboard</h1>
+<h1>Add cache</h1>
 
 <a href="{{url_for('main')}}">Home</a><br>
 <a href="{{url_for('login')}}">Login</a><br>
@@ -14,6 +14,13 @@
 <a href="{{url_for('addCache')}}">Add cache</a><br>
 <a href="{{url_for('findCache')}}">Find cache</a><br>
 
+<form method="POST" action="">
+    {{ form.hidden_tag() }}
+    {{ form.X_Cord }}
+    {{ form.Y_Cord }}
+    {{ form.Comment }}
+    {{ form.submit }}
+</form>
 
 </body>
 </html>
