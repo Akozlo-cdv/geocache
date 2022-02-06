@@ -1,14 +1,15 @@
 import flask_login
-import uuid
 from flask import Flask, render_template, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 import requests
-import simplejson as json
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
+
+#docker create container
+#docker build -t geocache . ; docker run -p 333:333 --rm --name geocacherun geocache
 
 app = Flask(__name__)
 
@@ -43,8 +44,8 @@ class Cache(db.Model):
 
 
 class RegisterForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"Placeholder": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"Placeholder": "Password"})
+    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"": "Password"})
     submit = SubmitField("Register")
 
     def check_if_user_exists(self, username):
@@ -55,20 +56,24 @@ class RegisterForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"Placeholder": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"Placeholder": "Password"})
+    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"": "Password"})
     submit = SubmitField("Login")
 
 
 class CacheForm(FlaskForm):
-    X_Cord = StringField(validators=[InputRequired()], render_kw={"Placeholder": "X:"})
-    Y_Cord = StringField(validators=[InputRequired()], render_kw={"Placeholder": "Y:"})
-    Comment = StringField(validators=[InputRequired(), Length(min=0, max=300)], render_kw={"Placeholder": "Comment:"})
+    X_Cord = StringField(validators=[InputRequired()], render_kw={"": "X:"})
+    Y_Cord = StringField(validators=[InputRequired()], render_kw={"": "Y:"})
+    Comment = StringField(validators=[InputRequired(), Length(min=0, max=300)], render_kw={"": "Comment:"})
     submit = SubmitField("Add Cache")
 
 
 class FindCacheFormByUser(FlaskForm):
-    username = StringField(validators=[InputRequired()], render_kw={"Placeholder": "ID: "})
+    creator = StringField(validators=[InputRequired()], render_kw={"Test": "Username: "})
+    submit = SubmitField("Find Cache")
+
+class RemoveCache(FlaskForm):
+    id = StringField(validators=[InputRequired()], render_kw={"Test": "Username: "})
     submit = SubmitField("Find Cache")
 
 
@@ -119,11 +124,23 @@ def addCache():
 @app.route('/find_cache', methods=['GET', 'POST'])
 @login_required
 def findCache():
-    form = CacheForm()
+    results = ""
+    form = FindCacheFormByUser()
     if form.validate_on_submit():
+        results = Cache.query.filter_by(creator=form.creator.data).all()
         db.session.commit()
 
-    return render_template('addCache.html', form=form)
+    return render_template('findCache.html', form=form, results=results)
+
+@app.route('/remove_cache', methods=['GET', 'POST'])
+@login_required
+def removeCache():
+    form = RemoveCache()
+    if form.validate_on_submit():
+        Cache.query.filter_by(id=form.id.data).delete()
+        db.session.commit()
+
+    return render_template('removeCache.html', form=form)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -137,7 +154,10 @@ def register():
         db.session.commit()
         return redirect(url_for('login'))
 
-    return render_template('register.html', form=form)
+    return render_template('Register.html', form=form)
 
 # new_cache = Cache(creator=flask_login.current_user, X_Cord=form.X_Cord.data, Y_Cord=form.Y_Cord.data,
 #                  Comment=form.Comment.data)
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=333)
