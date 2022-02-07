@@ -17,7 +17,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SECRET_KEY'] = 'admin'
+app.config['SECRET_KEY'] = 'BKzLvB97NB30e7wax2rS2U6lghHRBsa'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -90,7 +90,7 @@ def login():
         if user:
             if bcrypt.check_password_hash(user.password, form.password.data):
                 login_user(user)
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('main'))
     return render_template('login.html', form=form)
 
 
@@ -132,8 +132,8 @@ def findCache():
         for x in results:
             fin_resaults = fin_resaults + "ID: " + str(x.id) + "<br>"
             fin_resaults = fin_resaults + "Creator: " + x.creator + "<br>"
-            fin_resaults = fin_resaults + "X: " + str(x.X_Cord) + "<br>"
-            fin_resaults = fin_resaults + "Y: " + str(x.Y_Cord) + "<br>"
+            fin_resaults = fin_resaults + "X: " + str(x.X_Cord) + "°<br>"
+            fin_resaults = fin_resaults + "Y: " + str(x.Y_Cord) + "°<br>"
             fin_resaults = fin_resaults + "Comment: " + x.Comment + "<br><br>"
 
         db.session.commit()
