@@ -1,5 +1,5 @@
 import flask_login
-from flask import Flask, render_template, url_for, redirect
+from flask import Flask, render_template, url_for, redirect, Markup
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 import requests
@@ -44,8 +44,8 @@ class Cache(db.Model):
 
 
 class RegisterForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"": "Password"})
+    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Password"})
     submit = SubmitField("Register")
 
     def check_if_user_exists(self, username):
@@ -56,25 +56,25 @@ class RegisterForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"": "Username"})
-    password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"": "Password"})
+    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Password"})
     submit = SubmitField("Login")
 
 
 class CacheForm(FlaskForm):
-    X_Cord = StringField(validators=[InputRequired()], render_kw={"": "X:"})
-    Y_Cord = StringField(validators=[InputRequired()], render_kw={"": "Y:"})
-    Comment = StringField(validators=[InputRequired(), Length(min=0, max=300)], render_kw={"": "Comment:"})
+    X_Cord = StringField(validators=[InputRequired()], render_kw={"placeholder": "X:"})
+    Y_Cord = StringField(validators=[InputRequired()], render_kw={"placeholder": "Y:"})
+    Comment = StringField(validators=[InputRequired(), Length(min=0, max=300)], render_kw={"placeholder": "Comment:"})
     submit = SubmitField("Add Cache")
 
 
 class FindCacheFormByUser(FlaskForm):
-    creator = StringField(validators=[InputRequired()], render_kw={"Test": "Username: "})
+    creator = StringField(validators=[InputRequired()], render_kw={"placeholder": "Username: "})
     submit = SubmitField("Find Cache")
 
 class RemoveCache(FlaskForm):
-    id = StringField(validators=[InputRequired()], render_kw={"Test": "Username: "})
-    submit = SubmitField("Find Cache")
+    id = StringField(validators=[InputRequired()], render_kw={"placeholder": "Username: "})
+    submit = SubmitField("Remove Cache")
 
 
 @app.route('/home')
@@ -124,21 +124,31 @@ def addCache():
 @app.route('/find_cache', methods=['GET', 'POST'])
 @login_required
 def findCache():
+    fin_resaults = ""
     results = ""
     form = FindCacheFormByUser()
     if form.validate_on_submit():
         results = Cache.query.filter_by(creator=form.creator.data).all()
+        for x in results:
+            fin_resaults = fin_resaults + "ID: " + str(x.id) + "<br>"
+            fin_resaults = fin_resaults + "Creator: " + x.creator + "<br>"
+            fin_resaults = fin_resaults + "X: " + str(x.X_Cord) + "<br>"
+            fin_resaults = fin_resaults + "Y: " + str(x.Y_Cord) + "<br>"
+            fin_resaults = fin_resaults + "Comment: " + x.Comment + "<br><br>"
+
         db.session.commit()
 
-    return render_template('findCache.html', form=form, results=results)
+    return render_template('findCache.html', form=form, results=Markup(fin_resaults))
 
 @app.route('/remove_cache', methods=['GET', 'POST'])
 @login_required
 def removeCache():
     form = RemoveCache()
     if form.validate_on_submit():
-        Cache.query.filter_by(id=form.id.data).delete()
-        db.session.commit()
+        user = Cache.query.filter_by(id=form.id.data).one()
+        if (user.creator == flask_login.current_user.username):
+            Cache.query.filter_by(id=form.id.data).delete()
+            db.session.commit()
 
     return render_template('removeCache.html', form=form)
 
