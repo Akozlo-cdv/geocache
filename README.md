@@ -6,7 +6,8 @@ set FLASK_APP=app; flask run --host=0.0.0.0 --port=333
 
 ###Gotowy kontener Docker
 
-docker pull akozcdv/geocache:latest
+docker pull akozcdv/geocache:latest; docker run -d -p 333:333 akozcdv/geocache
+
 
 ###Przykładowe konta:
 
